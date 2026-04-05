@@ -1,4 +1,6 @@
 import re
+import os
+import base64
 from difflib import SequenceMatcher
 from typing import Optional, Dict, List, Tuple
 
@@ -73,15 +75,133 @@ SEARCH_PRICE_BANDS = [
     ("20+", 20, None),
 ]
 
+QUICK_SCENARIOS = {
+    "🍗 Tək yemək (10–15 AZN)": {
+        "basket_mode_radio": "Kateqoriya üzrə say",
+        "basket_min_total_input": "10",
+        "basket_max_total_input": "15",
+        "basket_count_MAIN": 1,
+    },
+    "🥤 Yemək + içki (12–20 AZN)": {
+        "basket_mode_radio": "Kateqoriya üzrə say",
+        "basket_min_total_input": "12",
+        "basket_max_total_input": "20",
+        "basket_count_MAIN": 1,
+        "basket_count_SOFT_DRINK": 1,
+    },
+    "🍽️ Nahar (15–25 AZN)": {
+        "basket_mode_radio": "Kateqoriya üzrə say",
+        "basket_min_total_input": "15",
+        "basket_max_total_input": "25",
+        "basket_count_MAIN": 1,
+        "basket_count_SALAD": 1,
+        "basket_count_SOFT_DRINK": 1,
+    },
+    "🔥 Axşam + içki": {
+        "basket_mode_radio": "Kateqoriya üzrə say",
+        "basket_min_total_input": "20",
+        "basket_max_total_input": "40",
+        "basket_count_MAIN": 1,
+        "basket_count_SOFT_DRINK": 1,
+        "basket_count_DESSERT": 1,
+    },
+}
+
 # =========================
-# STYLES
+# BACKGROUND
+# =========================
+def set_background(image_file: str = "background.jpg") -> None:
+    if os.path.exists(image_file):
+        with open(image_file, "rb") as f:
+            encoded = base64.b64encode(f.read()).decode()
+
+        st.markdown(
+            f"""
+            <style>
+            .stApp {{
+                background-image:
+                    linear-gradient(rgba(8, 15, 30, 0.82), rgba(8, 15, 30, 0.86)),
+                    url("data:image/jpg;base64,{encoded}");
+                background-size: cover;
+                background-position: center;
+                background-repeat: no-repeat;
+                background-attachment: fixed;
+            }}
+            </style>
+            """,
+            unsafe_allow_html=True,
+        )
+    else:
+        st.markdown(
+            """
+            <style>
+            .stApp {
+                background: linear-gradient(135deg, #0b1220 0%, #111827 45%, #0f172a 100%);
+            }
+            </style>
+            """,
+            unsafe_allow_html=True,
+        )
+
+set_background("background.jpg")
+
+# =========================
+# GLOBAL DARK UI CSS
 # =========================
 st.markdown(
     """
     <style>
+    html, body, [class*="css"] {
+        color: #f3f4f6;
+    }
+
+    .stApp {
+        color: #f3f4f6;
+    }
+
+    [data-testid="stAppViewContainer"] {
+        background: transparent;
+    }
+
+    [data-testid="stHeader"] {
+        background: rgba(0,0,0,0);
+    }
+
+    [data-testid="stToolbar"] {
+        right: 1rem;
+    }
+
+    [data-testid="stSidebar"] {
+        background: rgba(15, 23, 42, 0.95);
+        color: #f9fafb;
+    }
+
+    .hero-box {
+        border: 1px solid rgba(255,255,255,0.10);
+        border-radius: 18px;
+        padding: 22px 22px 16px 22px;
+        background: rgba(15, 23, 42, 0.72);
+        margin-bottom: 18px;
+        backdrop-filter: blur(6px);
+    }
+
+    .hero-title {
+        font-size: 32px;
+        font-weight: 700;
+        margin-bottom: 6px;
+        color: #f9fafb;
+    }
+
+    .hero-subtitle {
+        font-size: 15px;
+        opacity: 0.92;
+        margin-bottom: 16px;
+        color: #e5e7eb;
+    }
+
     .page-subtitle {
         font-size: 14px;
-        opacity: 0.82;
+        color: #d1d5db;
         margin-top: -8px;
         margin-bottom: 18px;
     }
@@ -91,7 +211,9 @@ st.markdown(
         border-radius: 14px;
         padding: 14px 16px;
         margin-bottom: 10px;
-        background: rgba(255,255,255,0.02);
+        background: rgba(15, 23, 42, 0.70);
+        color: #f3f4f6;
+        backdrop-filter: blur(4px);
     }
 
     .restaurant-card {
@@ -99,50 +221,151 @@ st.markdown(
         border-radius: 16px;
         padding: 16px;
         margin-bottom: 14px;
-        background: rgba(255,255,255,0.03);
+        background: rgba(15, 23, 42, 0.74);
+        color: #f3f4f6;
+        backdrop-filter: blur(4px);
     }
 
     .item-title {
         font-size: 16px;
         font-weight: 600;
         margin-bottom: 6px;
+        color: #f9fafb;
     }
 
     .item-meta {
         font-size: 13px;
-        opacity: 0.85;
+        color: #d1d5db;
     }
 
     .summary-box {
         border: 1px solid rgba(255,255,255,0.10);
         border-radius: 14px;
         padding: 12px 14px;
-        background: rgba(255,255,255,0.025);
+        background: rgba(15, 23, 42, 0.74);
         margin-bottom: 10px;
+        color: #f3f4f6;
+        backdrop-filter: blur(4px);
     }
 
     .small-muted {
         font-size: 12px;
-        opacity: 0.80;
+        color: #cbd5e1;
     }
 
     .mode-box {
         border: 1px solid rgba(255,255,255,0.08);
         border-radius: 12px;
         padding: 10px 12px;
-        background: rgba(255,255,255,0.015);
+        background: rgba(15, 23, 42, 0.64);
         margin-bottom: 10px;
+        color: #f3f4f6;
+    }
+
+    .badge {
+        display: inline-block;
+        padding: 5px 10px;
+        border-radius: 999px;
+        background: rgba(16, 185, 129, 0.18);
+        color: #d1fae5;
+        font-size: 12px;
+        font-weight: 600;
+        margin-bottom: 8px;
     }
 
     div.stButton > button {
         border-radius: 10px;
         min-height: 2.15rem;
         padding: 0.22rem 0.70rem;
-        font-size: 0.90rem;
+        font-size: 0.92rem;
+        background: rgba(30, 41, 59, 0.96) !important;
+        color: #f9fafb !important;
+        border: 1px solid rgba(255,255,255,0.12) !important;
+    }
+
+    div.stButton > button:hover {
+        background: rgba(51, 65, 85, 0.98) !important;
+        color: #ffffff !important;
+        border: 1px solid rgba(255,255,255,0.20) !important;
+    }
+
+    div.stButton > button:focus {
+        box-shadow: none !important;
+        border: 1px solid rgba(249, 115, 22, 0.70) !important;
     }
 
     div[data-testid="stHorizontalBlock"] {
         align-items: end;
+    }
+
+    /* INPUTS */
+    div[data-baseweb="input"] > div,
+    div[data-baseweb="base-input"] > div,
+    div[data-testid="stTextInput"] input,
+    div[data-testid="stNumberInput"] input {
+        background-color: rgba(15, 23, 42, 0.90) !important;
+        color: #f9fafb !important;
+        border: 1px solid rgba(255,255,255,0.12) !important;
+    }
+
+    div[data-testid="stTextInput"] input::placeholder,
+    div[data-testid="stNumberInput"] input::placeholder {
+        color: #94a3b8 !important;
+    }
+
+    /* SELECTBOX */
+    div[data-baseweb="select"] > div {
+        background-color: rgba(15, 23, 42, 0.90) !important;
+        color: #f9fafb !important;
+        border: 1px solid rgba(255,255,255,0.12) !important;
+    }
+
+    div[data-baseweb="select"] span,
+    div[data-baseweb="select"] input {
+        color: #f9fafb !important;
+    }
+
+    /* MULTISELECT TAGS */
+    div[data-baseweb="tag"] {
+        background-color: rgba(30, 41, 59, 0.96) !important;
+        color: #f9fafb !important;
+        border: 1px solid rgba(255,255,255,0.10) !important;
+    }
+
+    /* RADIO */
+    div[role="radiogroup"] label {
+        color: #f3f4f6 !important;
+    }
+
+    /* TABS */
+    button[data-baseweb="tab"] {
+        color: #d1d5db !important;
+        background: transparent !important;
+    }
+
+    button[data-baseweb="tab"][aria-selected="true"] {
+        color: #f9fafb !important;
+        border-bottom: 2px solid #f97316 !important;
+    }
+
+    /* EXPANDER */
+    details {
+        background: rgba(15, 23, 42, 0.55);
+        border-radius: 12px;
+        padding: 4px 8px;
+    }
+
+    /* METRIC */
+    div[data-testid="stMetric"] {
+        background: rgba(15, 23, 42, 0.72);
+        border: 1px solid rgba(255,255,255,0.10);
+        border-radius: 14px;
+        padding: 10px 14px;
+    }
+
+    /* LABELS */
+    label, p, span, div {
+        color: inherit;
     }
     </style>
     """,
@@ -150,7 +373,7 @@ st.markdown(
 )
 
 # =========================
-# TEXT / FILTER HELPERS
+# HELPERS
 # =========================
 def normalize_text(text) -> str:
     if pd.isna(text):
@@ -167,7 +390,6 @@ def normalize_text(text) -> str:
     }
     for old, new in replacements.items():
         text = text.replace(old, new)
-
     text = re.sub(r"[^a-z0-9\s]", " ", text)
     text = re.sub(r"\s+", " ", text)
     return text.strip()
@@ -206,7 +428,12 @@ def midpoint(min_val: Optional[float], max_val: Optional[float]) -> Optional[flo
     return None
 
 
-def apply_price_range(df: pd.DataFrame, price_col: str, min_price: Optional[float], max_price: Optional[float]) -> pd.DataFrame:
+def apply_price_range(
+    df: pd.DataFrame,
+    price_col: str,
+    min_price: Optional[float],
+    max_price: Optional[float],
+) -> pd.DataFrame:
     work = df.copy()
     if min_price is not None:
         work = work[work[price_col] >= min_price].copy()
@@ -219,62 +446,68 @@ def get_category_label(final_class: str) -> str:
     return CATEGORY_LABELS.get(str(final_class).upper(), str(final_class))
 
 
-# =========================
-# SESSION HELPERS
-# =========================
-def safe_session_default(key: str, value):
+def safe_session_default(key: str, value) -> None:
     if key not in st.session_state:
         st.session_state[key] = value
 
 
-def set_widget_value(key: str, value):
+def set_widget_value(key: str, value) -> None:
     st.session_state[key] = value
 
 
-def clear_text_key(key: str):
+def clear_text_key(key: str) -> None:
     st.session_state[key] = ""
 
 
-def clear_select_key(key: str):
+def clear_select_key(key: str) -> None:
     st.session_state[key] = ""
 
 
-def clear_multiselect_key(key: str):
+def clear_multiselect_key(key: str) -> None:
     st.session_state[key] = []
 
 
-def clear_number_key(key: str):
+def clear_number_key(key: str) -> None:
     st.session_state[key] = 0
 
 
-def reset_many(default_map: Dict[str, object]):
+def reset_many(default_map: Dict[str, object]) -> None:
     for k, v in default_map.items():
         st.session_state[k] = v
+
+
+def init_basket_count_defaults() -> None:
+    for _, class_code in BASKET_CATEGORY_OPTIONS:
+        safe_session_default(f"basket_count_{class_code}", 0)
+
+
+def apply_quick_scenario(scenario_name: str) -> None:
+    init_basket_count_defaults()
+    for _, class_code in BASKET_CATEGORY_OPTIONS:
+        st.session_state[f"basket_count_{class_code}"] = 0
+
+    defaults = QUICK_SCENARIOS.get(scenario_name, {})
+    for k, v in defaults.items():
+        st.session_state[k] = v
+
+    st.session_state["hero_message"] = f"'{scenario_name}' ssenarisi yükləndi. İndi Səbət bölməsində hesabla."
 
 
 # =========================
 # UI HELPERS
 # =========================
-def render_tab_reset_button(label: str, reset_map: Dict[str, object], key: str):
-    st.button(
-        label,
-        key=key,
-        on_click=reset_many,
-        args=(reset_map,)
-    )
+def render_tab_reset_button(label: str, reset_map: Dict[str, object], key: str) -> None:
+    st.button(label, key=key, on_click=reset_many, args=(reset_map,))
 
 
 def render_clearable_text(label: str, key: str, placeholder: str = "") -> str:
     safe_session_default(key, "")
     c1, c2 = st.columns([18, 1])
-
     with c1:
         value = st.text_input(label, key=key, placeholder=placeholder)
-
     with c2:
         st.markdown("<div style='height: 28px;'></div>", unsafe_allow_html=True)
         st.button("×", key=f"clear_{key}", on_click=clear_text_key, args=(key,), help="Təmizlə")
-
     return value
 
 
@@ -296,19 +529,11 @@ def render_clearable_selectbox(
         return x
 
     c1, c2 = st.columns([18, 1])
-
     with c1:
-        value = st.selectbox(
-            label,
-            options=final_options,
-            key=key,
-            format_func=_fmt,
-        )
-
+        value = st.selectbox(label, options=final_options, key=key, format_func=_fmt)
     with c2:
         st.markdown("<div style='height: 28px;'></div>", unsafe_allow_html=True)
         st.button("×", key=f"clear_{key}", on_click=clear_select_key, args=(key,), help="Təmizlə")
-
     return value
 
 
@@ -320,56 +545,52 @@ def render_clearable_multiselect(
 ) -> List[str]:
     safe_session_default(key, [])
     c1, c2 = st.columns([18, 1])
-
     with c1:
         if format_map:
             value = st.multiselect(
                 label,
                 options=options,
                 key=key,
-                format_func=lambda x: format_map.get(x, x)
+                format_func=lambda x: format_map.get(x, x),
             )
         else:
             value = st.multiselect(label, options=options, key=key)
-
     with c2:
         st.markdown("<div style='height: 28px;'></div>", unsafe_allow_html=True)
         st.button("×", key=f"clear_{key}", on_click=clear_multiselect_key, args=(key,), help="Təmizlə")
-
     return value
 
 
 def render_price_range(prefix: str, min_key: str, max_key: str) -> Tuple[Optional[float], Optional[float]]:
     safe_session_default(min_key, "")
     safe_session_default(max_key, "")
-
     c1, c2 = st.columns(2)
     with c1:
         min_text = render_clearable_text(f"{prefix} minimum", min_key, placeholder="məs: 5")
     with c2:
         max_text = render_clearable_text(f"{prefix} maksimum", max_key, placeholder="məs: 25")
-
     return parse_price(min_text), parse_price(max_text)
 
 
 # =========================
 # BASKET STATE
 # =========================
-def init_basket_state():
+def init_basket_state() -> None:
     safe_session_default("basket_restaurant", None)
     safe_session_default("basket_items", [])
+    safe_session_default("hero_message", "")
 
 
-def clear_basket():
+def clear_basket() -> None:
     st.session_state["basket_restaurant"] = None
     st.session_state["basket_items"] = []
 
 
-def basket_total():
+def basket_total() -> float:
     return round(sum(x["price"] for x in st.session_state["basket_items"]), 2)
 
 
-def add_to_basket(restaurant_name: str, item_name: str, price: float, final_class: str):
+def add_to_basket(restaurant_name: str, item_name: str, price: float, final_class: str) -> None:
     current_restaurant = st.session_state["basket_restaurant"]
     if current_restaurant is None:
         st.session_state["basket_restaurant"] = restaurant_name
@@ -377,22 +598,24 @@ def add_to_basket(restaurant_name: str, item_name: str, price: float, final_clas
         st.warning("Səbət yalnız bir restoran üçün ola bilər. Əvvəl səbəti təmizlə.")
         return
 
-    st.session_state["basket_items"].append({
-        "restaurant_name": restaurant_name,
-        "item_name": item_name,
-        "price": float(price),
-        "class": final_class
-    })
+    st.session_state["basket_items"].append(
+        {
+            "restaurant_name": restaurant_name,
+            "item_name": item_name,
+            "price": float(price),
+            "class": final_class,
+        }
+    )
 
 
-def load_result_basket(row: Dict):
+def load_result_basket(row: Dict) -> None:
     clear_basket()
     for item in row["items"]:
         add_to_basket(
             restaurant_name=row["restaurant_name"],
             item_name=item["item_name"],
             price=item["price"],
-            final_class=item["class"]
+            final_class=item["class"],
         )
 
 
@@ -427,17 +650,16 @@ def load_menu_data() -> pd.DataFrame:
 
 @st.cache_data
 def build_choice_df(df: pd.DataFrame) -> pd.DataFrame:
-    work = (
+    return (
         df.sort_values(["SLUG", "FINAL_CLASS", "ITEM_NAME", "PRICE"], ascending=[True, True, True, True])
         .drop_duplicates(subset=["SLUG", "FINAL_CLASS", "ITEM_NAME"], keep="first")
         .copy()
     )
-    return work
 
 
 @st.cache_data
 def get_class_price_stats(df: pd.DataFrame) -> pd.DataFrame:
-    stats = (
+    return (
         df.groupby("FINAL_CLASS")["PRICE"]
         .agg(
             q25=lambda s: s.quantile(0.25),
@@ -448,7 +670,6 @@ def get_class_price_stats(df: pd.DataFrame) -> pd.DataFrame:
         )
         .reset_index()
     )
-    return stats
 
 
 def get_class_stats_map(df: pd.DataFrame) -> Dict[str, Dict]:
@@ -462,12 +683,10 @@ def get_class_stats_map(df: pd.DataFrame) -> Dict[str, Dict]:
 def get_token_overlap_score(query_norm: str, candidate_norm: str) -> float:
     if not query_norm or not candidate_norm:
         return 0.0
-
     q_tokens = set(query_norm.split())
     c_tokens = set(candidate_norm.split())
     if not q_tokens or not c_tokens:
         return 0.0
-
     overlap = len(q_tokens.intersection(c_tokens))
     return overlap / max(1, len(q_tokens))
 
@@ -475,12 +694,10 @@ def get_token_overlap_score(query_norm: str, candidate_norm: str) -> float:
 def get_fuzzy_match_score(query_text: str, item_name: str, item_norm: str) -> float:
     q = normalize_text(query_text)
     cand = item_norm if item_norm else normalize_text(item_name)
-
     if not q:
         return 0.0
 
     score = 0.0
-
     if cand == q:
         score += 100
     if cand.startswith(q):
@@ -493,7 +710,6 @@ def get_fuzzy_match_score(query_text: str, item_name: str, item_norm: str) -> fl
 
     q_tokens = q.split()
     cand_tokens = cand.split()
-
     for qt in q_tokens:
         for ct in cand_tokens:
             if qt == ct:
@@ -510,7 +726,7 @@ def score_candidate_row(
     row: pd.Series,
     class_stats_map: Dict[str, Dict],
     target_price: Optional[float] = None,
-    query_text: str = ""
+    query_text: str = "",
 ) -> float:
     fc = row["FINAL_CLASS"]
     price = float(row["PRICE"])
@@ -522,7 +738,6 @@ def score_candidate_row(
     med = float(stats.get("median", price))
 
     score = 0.0
-
     if price < q25 * 0.7:
         score -= 4.0
     elif price < q25:
@@ -537,10 +752,7 @@ def score_candidate_row(
     if char_count >= 8:
         score += 0.8
 
-    ultra_simple = {
-        "su", "cay", "cola", "fanta", "sprite", "ayran",
-        "espresso", "americano", "latte", "kapucino"
-    }
+    ultra_simple = {"su", "cay", "cola", "fanta", "sprite", "ayran", "espresso", "americano", "latte", "kapucino"}
     if item_norm in ultra_simple:
         score -= 2.0
 
@@ -552,6 +764,13 @@ def score_candidate_row(
     return score
 
 
+def compute_bundle_score(total_price: float, item_count: int, target_mid: Optional[float], avg_item_score: float) -> float:
+    price_score = 0.0 if target_mid is None else max(0.0, 100 - abs(total_price - target_mid) * 5)
+    completeness_score = min(100, item_count * 20)
+    diversity_score = min(100, avg_item_score * 4)
+    return round(price_score * 0.4 + completeness_score * 0.4 + diversity_score * 0.2, 2)
+
+
 def get_top_query_suggestions(df: pd.DataFrame, query_text: str, max_suggestions: int = 8) -> List[str]:
     q = normalize_text(query_text)
     if not q:
@@ -560,11 +779,33 @@ def get_top_query_suggestions(df: pd.DataFrame, query_text: str, max_suggestions
     temp = df[["ITEM_NAME", "ITEM_NAME_NORM"]].drop_duplicates().copy()
     temp["suggest_score"] = temp.apply(
         lambda row: get_fuzzy_match_score(q, row["ITEM_NAME"], row["ITEM_NAME_NORM"]),
-        axis=1
+        axis=1,
     )
     temp = temp[temp["suggest_score"] > 12].copy()
     temp = temp.sort_values(["suggest_score", "ITEM_NAME"], ascending=[False, True])
     return temp["ITEM_NAME"].head(max_suggestions).tolist()
+
+
+# =========================
+# MENU / SEARCH HELPERS
+# =========================
+def get_restaurant_menu(df: pd.DataFrame, restaurant_name: str) -> pd.DataFrame:
+    return df[df["RESTAURANT_NAME"] == restaurant_name].copy()
+
+
+def get_item_options_for_df(df: pd.DataFrame, final_class: Optional[str] = None) -> Tuple[List[str], Dict[str, str]]:
+    work = df.copy()
+    if final_class:
+        work = work[work["FINAL_CLASS"] == final_class].copy()
+
+    if work.empty:
+        return [], {}
+
+    work = work.sort_values(["ITEM_NAME", "PRICE"], ascending=[True, True]).copy()
+    work = work.drop_duplicates(subset=["ITEM_NAME"], keep="first")
+    options = work["ITEM_NAME"].astype(str).tolist()
+    display_map = {row["ITEM_NAME"]: f"{row['PRICE']:.2f} AZN — {row['ITEM_NAME']}" for _, row in work.iterrows()}
+    return options, display_map
 
 
 def search_market_items(
@@ -581,20 +822,16 @@ def search_market_items(
 
     if selected_restaurants:
         work = work[work["RESTAURANT_NAME"].isin(selected_restaurants)].copy()
-
     if selected_classes:
         work = work[work["FINAL_CLASS"].isin(selected_classes)].copy()
-
     if selected_item:
         work = work[work["ITEM_NAME"] == selected_item].copy()
 
     work = apply_price_range(work, "PRICE", min_price, max_price)
-
     if work.empty:
         return work
 
     active_query = selected_item if selected_item else query_text.strip()
-
     class_stats_map = get_class_stats_map(df)
     target_mid = midpoint(min_price, max_price)
 
@@ -607,7 +844,6 @@ def search_market_items(
             mask = mask | work["ITEM_NAME_NORM"].str.contains(token, regex=False)
 
         rough = work[mask].copy()
-
         if rough.empty:
             rough = work.copy()
 
@@ -616,39 +852,27 @@ def search_market_items(
                 row,
                 class_stats_map=class_stats_map,
                 target_price=target_mid,
-                query_text=active_query
+                query_text=active_query,
             ),
-            axis=1
+            axis=1,
         )
 
         rough = rough[rough["match_score"] > 8].copy()
-        rough = rough.sort_values(
-            ["match_score", "PRICE", "RESTAURANT_NAME", "ITEM_NAME"],
-            ascending=[False, True, True, True]
-        )
+        rough = rough.sort_values(["match_score", "PRICE", "RESTAURANT_NAME", "ITEM_NAME"], ascending=[False, True, True, True])
         return rough.head(top_n).copy()
 
     work["match_score"] = work.apply(
-        lambda row: score_candidate_row(
-            row,
-            class_stats_map=class_stats_map,
-            target_price=target_mid,
-            query_text=""
-        ),
-        axis=1
+        lambda row: score_candidate_row(row, class_stats_map=class_stats_map, target_price=target_mid, query_text=""),
+        axis=1,
     )
-
-    work = work.sort_values(
-        ["match_score", "PRICE", "RESTAURANT_NAME", "ITEM_NAME"],
-        ascending=[False, True, True, True]
-    )
+    work = work.sort_values(["match_score", "PRICE", "RESTAURANT_NAME", "ITEM_NAME"], ascending=[False, True, True, True])
     return work.head(top_n).copy()
 
 
 def group_search_results_by_restaurant(
     results_df: pd.DataFrame,
     top_restaurants: int = 12,
-    sample_items_per_restaurant: int = 4
+    sample_items_per_restaurant: int = 4,
 ) -> List[Dict]:
     if results_df.empty:
         return []
@@ -657,32 +881,26 @@ def group_search_results_by_restaurant(
     for rest_name, part in results_df.groupby("RESTAURANT_NAME"):
         part = part.sort_values(["match_score", "PRICE", "ITEM_NAME"], ascending=[False, True, True]).copy()
         sample_items = part.head(sample_items_per_restaurant)[["ITEM_NAME", "PRICE", "FINAL_CLASS"]].to_dict("records")
+        rows.append(
+            {
+                "restaurant_name": rest_name,
+                "match_count": int(len(part)),
+                "min_price": float(part["PRICE"].min()),
+                "median_price": float(part["PRICE"].median()),
+                "max_price": float(part["PRICE"].max()),
+                "best_score": float(part["match_score"].max()),
+                "sample_items": sample_items,
+            }
+        )
 
-        rows.append({
-            "restaurant_name": rest_name,
-            "match_count": int(len(part)),
-            "min_price": float(part["PRICE"].min()),
-            "median_price": float(part["PRICE"].median()),
-            "max_price": float(part["PRICE"].max()),
-            "best_score": float(part["match_score"].max()),
-            "sample_items": sample_items,
-        })
-
-    rows = sorted(
-        rows,
-        key=lambda x: (-x["best_score"], -x["match_count"], x["min_price"], x["restaurant_name"])
-    )
+    rows = sorted(rows, key=lambda x: (-x["best_score"], -x["match_count"], x["min_price"], x["restaurant_name"]))
     return rows[:top_restaurants]
 
 
 def build_search_overview(results_df: pd.DataFrame) -> Dict:
     by_restaurant = (
         results_df.groupby("RESTAURANT_NAME")
-        .agg(
-            item_count=("ITEM_NAME", "count"),
-            min_price=("PRICE", "min"),
-            median_price=("PRICE", "median"),
-        )
+        .agg(item_count=("ITEM_NAME", "count"), min_price=("PRICE", "min"), median_price=("PRICE", "median"))
         .reset_index()
     )
 
@@ -693,33 +911,9 @@ def build_search_overview(results_df: pd.DataFrame) -> Dict:
         "median_price": float(results_df["PRICE"].median()),
         "max_price": float(results_df["PRICE"].max()),
         "top_restaurant_by_count": by_restaurant.sort_values(
-            ["item_count", "min_price", "RESTAURANT_NAME"],
-            ascending=[False, True, True]
+            ["item_count", "min_price", "RESTAURANT_NAME"], ascending=[False, True, True]
         ).iloc[0]["RESTAURANT_NAME"],
     }
-
-
-# =========================
-# MENU / OPTIONS HELPERS
-# =========================
-def get_restaurant_menu(df: pd.DataFrame, restaurant_name: str) -> pd.DataFrame:
-    return df[df["RESTAURANT_NAME"] == restaurant_name].copy()
-
-
-def get_item_options_for_df(df: pd.DataFrame, final_class: Optional[str] = None) -> Tuple[List[str], Dict[str, str]]:
-    work = df.copy()
-    if final_class:
-        work = work[work["FINAL_CLASS"] == final_class].copy()
-
-    if work.empty:
-        return [], {}
-
-    work = work.sort_values(["ITEM_NAME", "PRICE"], ascending=[True, True]).copy()
-    work = work.drop_duplicates(subset=["ITEM_NAME"], keep="first")
-
-    options = work["ITEM_NAME"].astype(str).tolist()
-    display_map = {row["ITEM_NAME"]: f"{row['PRICE']:.2f} AZN — {row['ITEM_NAME']}" for _, row in work.iterrows()}
-    return options, display_map
 
 
 # =========================
@@ -740,18 +934,22 @@ def build_exact_basket_for_restaurant(rest_df: pd.DataFrame, selected_map: Dict[
             return None
 
         chosen = candidates.iloc[0]
-
-        basket_items.append({
-            "item_name": chosen["ITEM_NAME"],
-            "price": float(chosen["PRICE"]),
-            "class": chosen["FINAL_CLASS"]
-        })
+        basket_items.append(
+            {
+                "item_name": chosen["ITEM_NAME"],
+                "price": float(chosen["PRICE"]),
+                "class": chosen["FINAL_CLASS"],
+                "score": 50.0,
+            }
+        )
         total += float(chosen["PRICE"])
 
+    avg_item_score = sum(x["score"] for x in basket_items) / max(1, len(basket_items))
     return {
         "restaurant_name": rest_df["RESTAURANT_NAME"].iloc[0],
         "total_price": round(total, 2),
-        "items": basket_items
+        "items": basket_items,
+        "bundle_score": compute_bundle_score(total, len(basket_items), None, avg_item_score),
     }
 
 
@@ -760,7 +958,7 @@ def build_cross_restaurant_exact_baskets(
     selected_map: Dict[str, str],
     min_total: Optional[float],
     max_total: Optional[float],
-    top_n: int
+    top_n: int,
 ) -> List[Dict]:
     rows = []
     target_mid = midpoint(min_total, max_total)
@@ -776,11 +974,10 @@ def build_cross_restaurant_exact_baskets(
         if max_total is not None and total > max_total:
             continue
 
-        budget_distance = abs(total - target_mid) if target_mid is not None else 0
-        built["budget_distance"] = budget_distance
+        built["bundle_score"] = compute_bundle_score(total, len(built["items"]), target_mid, 50.0)
         rows.append(built)
 
-    rows = sorted(rows, key=lambda x: (x["budget_distance"], x["total_price"], x["restaurant_name"]))
+    rows = sorted(rows, key=lambda x: (-x["bundle_score"], x["total_price"], x["restaurant_name"]))
     return rows[:top_n]
 
 
@@ -800,7 +997,7 @@ def choose_best_items_for_category_count(
 
     part["score"] = part.apply(
         lambda row: score_candidate_row(row, class_stats_map, target_price=target_price_per_item),
-        axis=1
+        axis=1,
     )
 
     part = part.sort_values(["score", "PRICE", "ITEM_NAME"], ascending=[False, True, True]).copy()
@@ -811,12 +1008,14 @@ def choose_best_items_for_category_count(
 
     rows = []
     for _, row in chosen.iterrows():
-        rows.append({
-            "item_name": row["ITEM_NAME"],
-            "price": float(row["PRICE"]),
-            "class": row["FINAL_CLASS"],
-            "score": float(row["score"])
-        })
+        rows.append(
+            {
+                "item_name": row["ITEM_NAME"],
+                "price": float(row["PRICE"]),
+                "class": row["FINAL_CLASS"],
+                "score": float(row["score"]),
+            }
+        )
     return rows
 
 
@@ -830,8 +1029,8 @@ def build_category_count_baskets(
     rows = []
     class_stats_map = get_class_stats_map(df)
     total_item_count = sum(category_counts.values())
-
     target_mid = midpoint(min_total, max_total)
+
     target_price_per_item = None
     if target_mid is not None and total_item_count > 0:
         target_price_per_item = target_mid / total_item_count
@@ -858,34 +1057,105 @@ def build_category_count_baskets(
             continue
 
         total = round(sum(x["price"] for x in basket_items), 2)
-
         if min_total is not None and total < min_total:
             continue
         if max_total is not None and total > max_total:
             continue
 
         avg_score = round(sum(x["score"] for x in basket_items) / len(basket_items), 3) if basket_items else 0.0
-        budget_distance = abs(total - target_mid) if target_mid is not None else 0.0
+        bundle_score = compute_bundle_score(total, len(basket_items), target_mid, avg_score)
 
-        rows.append({
-            "restaurant_name": restaurant_name,
-            "total_price": total,
-            "items": basket_items,
-            "avg_score": avg_score,
-            "budget_distance": budget_distance,
-        })
+        rows.append(
+            {
+                "restaurant_name": restaurant_name,
+                "total_price": total,
+                "items": basket_items,
+                "avg_score": avg_score,
+                "bundle_score": bundle_score,
+            }
+        )
 
-    rows = sorted(
-        rows,
-        key=lambda x: (x["budget_distance"], -x["avg_score"], x["total_price"], x["restaurant_name"])
+    rows = sorted(rows, key=lambda x: (-x["bundle_score"], x["total_price"], x["restaurant_name"]))
+    return rows[:top_n]
+
+
+def build_smart_bundles_from_query(
+    df: pd.DataFrame,
+    query_text: str,
+    min_total: Optional[float],
+    max_total: Optional[float],
+    selected_restaurants: List[str],
+    selected_classes: List[str],
+    top_n: int = 10,
+) -> List[Dict]:
+    work = df.copy()
+
+    if selected_restaurants:
+        work = work[work["RESTAURANT_NAME"].isin(selected_restaurants)].copy()
+    if selected_classes:
+        work = work[work["FINAL_CLASS"].isin(selected_classes)].copy()
+
+    if work.empty or not query_text.strip():
+        return []
+
+    class_stats_map = get_class_stats_map(df)
+    target_mid = midpoint(min_total, max_total)
+
+    work["smart_score"] = work.apply(
+        lambda row: score_candidate_row(row, class_stats_map=class_stats_map, target_price=target_mid, query_text=query_text),
+        axis=1,
     )
+
+    work = work[work["smart_score"] > 8].copy()
+    if work.empty:
+        return []
+
+    rows = []
+    for rest_name, part in work.groupby("RESTAURANT_NAME"):
+        part = part.sort_values(["smart_score", "PRICE", "ITEM_NAME"], ascending=[False, True, True]).copy()
+        part = part.drop_duplicates(subset=["ITEM_NAME"], keep="first")
+        picked = part.head(3).copy()
+
+        if picked.empty:
+            continue
+
+        total = round(float(picked["PRICE"].sum()), 2)
+        if min_total is not None and total < min_total:
+            continue
+        if max_total is not None and total > max_total:
+            continue
+
+        items = []
+        for _, row in picked.iterrows():
+            items.append(
+                {
+                    "item_name": row["ITEM_NAME"],
+                    "price": float(row["PRICE"]),
+                    "class": row["FINAL_CLASS"],
+                    "score": float(row["smart_score"]),
+                }
+            )
+
+        avg_score = sum(x["score"] for x in items) / len(items)
+        bundle_score = compute_bundle_score(total, len(items), target_mid, avg_score)
+
+        rows.append(
+            {
+                "restaurant_name": rest_name,
+                "total_price": total,
+                "items": items,
+                "bundle_score": bundle_score,
+            }
+        )
+
+    rows = sorted(rows, key=lambda x: (-x["bundle_score"], x["total_price"], x["restaurant_name"]))
     return rows[:top_n]
 
 
 # =========================
 # RENDER HELPERS
 # =========================
-def render_item_card(item_name: str, price: float, class_code: str, add_key: str, restaurant_name: str):
+def render_item_card(item_name: str, price: float, class_code: str, add_key: str, restaurant_name: str) -> None:
     st.markdown(
         f"""
         <div class="item-card">
@@ -899,12 +1169,16 @@ def render_item_card(item_name: str, price: float, class_code: str, add_key: str
         add_to_basket(restaurant_name, item_name, price, class_code)
 
 
-def render_basket_result_card(row: Dict, idx: str):
+def render_basket_result_card(row: Dict, idx: str, recommended: bool = False) -> None:
+    if recommended:
+        st.markdown("<div class='badge'>🔥 Tövsiyə olunur</div>", unsafe_allow_html=True)
+
     st.markdown(f"### {row['restaurant_name']}")
     st.markdown(
         f"""
         <div class="restaurant-card">
             <div><b>Ümumi qiymət:</b> {row['total_price']:.2f} AZN</div>
+            <div><b>Skor:</b> {row.get('bundle_score', 0):.2f}</div>
             <div class="small-muted">Seçilən məhsullar: {len(row['items'])}</div>
         </div>
         """,
@@ -914,17 +1188,11 @@ def render_basket_result_card(row: Dict, idx: str):
     for item in row["items"]:
         st.write(f"- {item['item_name']} — {item['price']:.2f} AZN")
 
-    st.button(
-        "Bu səbəti səbətə əlavə et",
-        key=f"choose_rest_{idx}",
-        on_click=load_result_basket,
-        args=(row,)
-    )
+    st.button("Bu səbəti səbətə əlavə et", key=f"choose_rest_{idx}", on_click=load_result_basket, args=(row,))
 
 
-def render_search_summary_boxes(summary: Dict):
+def render_search_summary_boxes(summary: Dict) -> None:
     c1, c2, c3, c4 = st.columns(4)
-
     with c1:
         st.markdown(f"<div class='summary-box'><b>Restoran sayı</b><br>{summary['restaurant_count']}</div>", unsafe_allow_html=True)
     with c2:
@@ -932,7 +1200,7 @@ def render_search_summary_boxes(summary: Dict):
     with c3:
         st.markdown(
             f"<div class='summary-box'><b>Qiymət aralığı</b><br>{summary['min_price']:.2f} – {summary['max_price']:.2f} AZN</div>",
-            unsafe_allow_html=True
+            unsafe_allow_html=True,
         )
     with c4:
         st.markdown(f"<div class='summary-box'><b>Median qiymət</b><br>{summary['median_price']:.2f} AZN</div>", unsafe_allow_html=True)
@@ -949,13 +1217,54 @@ except Exception as e:
     st.stop()
 
 init_basket_state()
+init_basket_count_defaults()
+
+safe_session_default("basket_top_n_number", 10)
+safe_session_default("search_top_n_number", 20)
+safe_session_default("smart_top_n_number", 10)
+safe_session_default("basket_mode_radio", "Kateqoriya üzrə say")
+safe_session_default("search_mode_radio", "Sadə")
 
 all_restaurants = sorted(choice_df["RESTAURANT_NAME"].dropna().astype(str).unique().tolist())
 all_classes = sorted(choice_df["FINAL_CLASS"].dropna().astype(str).unique().tolist())
 class_format_map = {x: get_category_label(x) for x in all_classes}
 global_item_options, global_item_display_map = get_item_options_for_df(choice_df)
 
-st.title("🍽️ Restoran Botu")
+# =========================
+# HERO
+# =========================
+st.markdown(
+    """
+    <div class="hero-box">
+        <div class="hero-title">🍽️ Harada və nə yemək?</div>
+        <div class="hero-subtitle">Büdcəni seç → variantları gör → ən uyğun restoranı tap</div>
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
+
+c1, c2, c3, c4 = st.columns(4)
+with c1:
+    if st.button("🍗 Tək yemək (10–15 AZN)", use_container_width=True):
+        apply_quick_scenario("🍗 Tək yemək (10–15 AZN)")
+        st.rerun()
+with c2:
+    if st.button("🥤 Yemək + içki", use_container_width=True):
+        apply_quick_scenario("🥤 Yemək + içki (12–20 AZN)")
+        st.rerun()
+with c3:
+    if st.button("🍽️ Nahar", use_container_width=True):
+        apply_quick_scenario("🍽️ Nahar (15–25 AZN)")
+        st.rerun()
+with c4:
+    if st.button("🔥 Axşam + içki", use_container_width=True):
+        apply_quick_scenario("🔥 Axşam + içki")
+        st.rerun()
+
+if st.session_state.get("hero_message"):
+    st.success(st.session_state["hero_message"])
+
+st.divider()
 
 tab1, tab2, tab3 = st.tabs(["Menyu", "Səbət", "Axtarış"])
 
@@ -965,7 +1274,7 @@ tab1, tab2, tab3 = st.tabs(["Menyu", "Səbət", "Axtarış"])
 with tab1:
     st.subheader("Restoranın menyusu")
     st.markdown(
-        "<div class='page-subtitle'>Bir restoran seç və onun menyusuna bax. Məhsulları filtr edə və səbətə əlavə edə bilərsən.</div>",
+        "<div class='page-subtitle'>Bir restoran seç və onun menyusuna bax. Əsas filtrlər yuxarıdadır, əlavə filtrlər isə aşağıdakı bölmədədir.</div>",
         unsafe_allow_html=True,
     )
 
@@ -985,69 +1294,72 @@ with tab1:
         label="Restoran seç",
         options=all_restaurants,
         key="menu_restaurant_select",
-        placeholder_label="Restoran seç..."
+        placeholder_label="Restoran seç...",
     )
 
     menu_item_selected = ""
+    menu_selected_classes = []
+    menu_min_price = None
+    menu_max_price = None
+
     if menu_restaurant:
-        menu_source_for_items = get_restaurant_menu(choice_df, menu_restaurant)
-        menu_item_options, menu_item_display_map = get_item_options_for_df(menu_source_for_items)
+        with st.expander("Əlavə filtrlər", expanded=False):
+            menu_source_for_items = get_restaurant_menu(choice_df, menu_restaurant)
+            menu_item_options, menu_item_display_map = get_item_options_for_df(menu_source_for_items)
 
-        menu_item_selected = render_clearable_selectbox(
-            label="Məhsulu siyahıdan seç",
-            options=menu_item_options,
-            key="menu_item_select",
-            placeholder_label="Məhsul seç...",
-            format_map=menu_item_display_map
-        )
+            menu_item_selected = render_clearable_selectbox(
+                label="Məhsulu siyahıdan seç",
+                options=menu_item_options,
+                key="menu_item_select",
+                placeholder_label="Məhsul seç...",
+                format_map=menu_item_display_map,
+            )
 
-    menu_selected_classes = render_clearable_multiselect(
-        "Kateqoriyalar",
-        options=all_classes,
-        key="menu_classes_multiselect",
-        format_map=class_format_map
-    )
+            menu_selected_classes = render_clearable_multiselect(
+                "Kateqoriyalar",
+                options=all_classes,
+                key="menu_classes_multiselect",
+                format_map=class_format_map,
+            )
 
-    menu_min_price, menu_max_price = render_price_range(
-        "Qiymət",
-        "menu_min_price_input",
-        "menu_max_price_input"
-    )
+            menu_min_price, menu_max_price = render_price_range(
+                "Qiymət",
+                "menu_min_price_input",
+                "menu_max_price_input",
+            )
 
-    if validate_min_max(menu_min_price, menu_max_price):
-        if menu_restaurant:
-            with st.spinner("Menyu yüklənir..."):
-                work = get_restaurant_menu(choice_df, menu_restaurant)
+    if menu_restaurant and validate_min_max(menu_min_price, menu_max_price):
+        with st.spinner("Menyu yüklənir..."):
+            work = get_restaurant_menu(choice_df, menu_restaurant)
 
-                if menu_selected_classes:
-                    work = work[work["FINAL_CLASS"].isin(menu_selected_classes)].copy()
+            if menu_selected_classes:
+                work = work[work["FINAL_CLASS"].isin(menu_selected_classes)].copy()
+            if menu_item_selected:
+                work = work[work["ITEM_NAME"] == menu_item_selected].copy()
 
-                if menu_item_selected:
-                    work = work[work["ITEM_NAME"] == menu_item_selected].copy()
+            work = apply_price_range(work, "PRICE", menu_min_price, menu_max_price)
 
-                work = apply_price_range(work, "PRICE", menu_min_price, menu_max_price)
+            if work.empty:
+                st.warning("Bu filtrərə uyğun məhsul tapılmadı.")
+            else:
+                grouped_classes = sorted(work["FINAL_CLASS"].dropna().astype(str).unique().tolist())
 
-                if work.empty:
-                    st.warning("Bu filtrərə uyğun məhsul tapılmadı.")
-                else:
-                    grouped_classes = sorted(work["FINAL_CLASS"].dropna().astype(str).unique().tolist())
+                for fc in grouped_classes:
+                    section_df = work[work["FINAL_CLASS"] == fc].copy()
+                    section_df = section_df.sort_values(["PRICE", "ITEM_NAME"], ascending=[True, True])
 
-                    for fc in grouped_classes:
-                        section_df = work[work["FINAL_CLASS"] == fc].copy()
-                        section_df = section_df.sort_values(["PRICE", "ITEM_NAME"], ascending=[True, True])
-
-                        st.markdown(f"### {get_category_label(fc)}")
-                        for _, row in section_df.iterrows():
-                            render_item_card(
-                                item_name=row["ITEM_NAME"],
-                                price=float(row["PRICE"]),
-                                class_code=row["FINAL_CLASS"],
-                                add_key=f"menu_add_{row.name}",
-                                restaurant_name=row["RESTAURANT_NAME"]
-                            )
-                        st.divider()
-        else:
-            st.info("Bu bölmədə əvvəl restoran seç.")
+                    st.markdown(f"### {get_category_label(fc)}")
+                    for _, row in section_df.iterrows():
+                        render_item_card(
+                            item_name=row["ITEM_NAME"],
+                            price=float(row["PRICE"]),
+                            class_code=row["FINAL_CLASS"],
+                            add_key=f"menu_add_{row.name}",
+                            restaurant_name=row["RESTAURANT_NAME"],
+                        )
+                    st.divider()
+    elif not menu_restaurant:
+        st.info("Bu bölmədə əvvəl restoran seç.")
 
 # =========================
 # TAB 2 - BASKET
@@ -1055,12 +1367,15 @@ with tab1:
 with tab2:
     st.subheader("Səbət yarat")
     st.markdown(
-        "<div class='page-subtitle'>Ya konkret məhsullar seç, ya da kateqoriya üzrə səbət qur. Sistem uyğun restoranları və ümumi qiyməti hesablayacaq.</div>",
+        "<div class='page-subtitle'>Ya konkret məhsullar seç, ya da kateqoriya üzrə səbət qur. Sistem ən yaxşı variantları hesablayacaq.</div>",
         unsafe_allow_html=True,
     )
 
+    if st.session_state.get("hero_message"):
+        st.info("Yuxarıdakı ssenari yüklənib. Sadəcə aşağıda 'Ən yaxşı variantları tap' düyməsini bas.")
+
     basket_reset_map = {
-        "basket_mode_radio": "Dəqiq seçim",
+        "basket_mode_radio": "Kateqoriya üzrə say",
         "basket_restaurant_choice_select": "",
         "basket_min_total_input": "",
         "basket_max_total_input": "",
@@ -1076,9 +1391,9 @@ with tab2:
 
     basket_mode = st.radio(
         "Rejim",
-        options=["Dəqiq seçim", "Kateqoriya üzrə say"],
+        options=["Kateqoriya üzrə say", "Dəqiq seçim"],
         horizontal=True,
-        key="basket_mode_radio"
+        key="basket_mode_radio",
     )
 
     if basket_mode == "Dəqiq seçim":
@@ -1093,24 +1408,23 @@ with tab2:
         )
 
     basket_restaurant_choice = render_clearable_selectbox(
-        label="Restoran seç",
+        label="Restoran seç (istəyə bağlı)",
         options=all_restaurants,
         key="basket_restaurant_choice_select",
-        placeholder_label="Restoran seç..."
+        placeholder_label="Restoran seç...",
     )
 
     basket_min_total, basket_max_total = render_price_range(
         "Ümumi səbət qiyməti",
         "basket_min_total_input",
-        "basket_max_total_input"
+        "basket_max_total_input",
     )
 
     basket_top_n = st.number_input(
         "Neçə variant göstərilsin?",
         min_value=1,
-        value=10,
         step=1,
-        key="basket_top_n_number"
+        key="basket_top_n_number",
     )
 
     if basket_restaurant_choice:
@@ -1133,12 +1447,12 @@ with tab2:
                         options=options,
                         key=f"basket_select_{class_code}",
                         placeholder_label=f"{label} seç...",
-                        format_map=display_map
+                        format_map=display_map,
                     )
                     if selected_value:
                         basket_selected_items[class_code] = selected_value
 
-            if st.button("Səbəti hesabla", key="basket_find_button_exact"):
+            if st.button("🔥 Ən yaxşı variantları tap", key="basket_find_button_exact"):
                 with st.spinner("Variantlar hesablanır..."):
                     if not basket_selected_items:
                         st.info("Ən azı bir kateqoriya üzrə məhsul seç.")
@@ -1146,7 +1460,7 @@ with tab2:
                         if basket_restaurant_choice:
                             built = build_exact_basket_for_restaurant(
                                 rest_df=basket_source_df,
-                                selected_map=basket_selected_items
+                                selected_map=basket_selected_items,
                             )
                             if built is None:
                                 st.warning("Seçilmiş məhsullar bu restoranda birlikdə tapılmadı.")
@@ -1157,22 +1471,20 @@ with tab2:
                                 elif basket_max_total is not None and total > basket_max_total:
                                     st.warning("Bu səbətin ümumi qiyməti maksimum limiti keçir.")
                                 else:
-                                    st.success("Səbət hesablandı.")
-                                    render_basket_result_card(built, idx="fixed")
+                                    render_basket_result_card(built, idx="fixed", recommended=True)
                         else:
                             rows = build_cross_restaurant_exact_baskets(
                                 df=basket_source_df,
                                 selected_map=basket_selected_items,
                                 min_total=basket_min_total,
                                 max_total=basket_max_total,
-                                top_n=int(basket_top_n)
+                                top_n=int(basket_top_n),
                             )
                             if not rows:
                                 st.warning("Bu seçimi toplamaq üçün uyğun restoran tapılmadı.")
                             else:
-                                st.success(f"{len(rows)} uyğun variant tapıldı.")
                                 for idx, row in enumerate(rows):
-                                    render_basket_result_card(row, idx=f"exact_{idx}")
+                                    render_basket_result_card(row, idx=f"exact_{idx}", recommended=(idx == 0))
                                     st.divider()
 
         else:
@@ -1187,9 +1499,8 @@ with tab2:
                             f"{label} sayı",
                             min_value=0,
                             max_value=10,
-                            value=0,
                             step=1,
-                            key=f"basket_count_{class_code}"
+                            key=f"basket_count_{class_code}",
                         )
                     with c2:
                         st.markdown("<div style='height: 28px;'></div>", unsafe_allow_html=True)
@@ -1198,11 +1509,11 @@ with tab2:
                             key=f"clear_basket_count_{class_code}",
                             on_click=clear_number_key,
                             args=(f"basket_count_{class_code}",),
-                            help="Təmizlə"
+                            help="Təmizlə",
                         )
                     count_values[class_code] = int(val)
 
-            if st.button("Səbəti hesabla", key="basket_find_button_count"):
+            if st.button("🔥 Ən yaxşı variantları tap", key="basket_find_button_count"):
                 with st.spinner("Variantlar hesablanır..."):
                     count_values = {k: v for k, v in count_values.items() if v > 0}
 
@@ -1214,24 +1525,28 @@ with tab2:
                             category_counts=count_values,
                             min_total=basket_min_total,
                             max_total=basket_max_total,
-                            top_n=int(basket_top_n)
+                            top_n=int(basket_top_n),
                         )
 
                         if not rows:
                             st.warning("Bu tərkibdə uyğun səbət tapılmadı.")
                         else:
-                            st.success(f"{len(rows)} variant hesablandı.")
                             for idx, row in enumerate(rows):
-                                render_basket_result_card(row, idx=f"count_{idx}")
+                                render_basket_result_card(row, idx=f"count_{idx}", recommended=(idx == 0))
                                 st.divider()
 
     st.markdown("## Cari səbət")
-
     if not st.session_state["basket_items"]:
         st.write("Səbət boşdur.")
     else:
+        total_now = basket_total()
+        c1, c2 = st.columns([2, 2])
+        with c1:
+            st.metric("💰 Cəmi", f"{total_now:.2f} AZN")
+        with c2:
+            st.metric("📦 Məhsul sayı", len(st.session_state["basket_items"]))
+
         st.write(f"**Restoran:** {st.session_state['basket_restaurant']}")
-        st.write(f"**Ümumi:** {basket_total():.2f} AZN")
 
         for i, item in enumerate(st.session_state["basket_items"]):
             c1, c2, c3 = st.columns([6, 2, 2])
@@ -1254,188 +1569,325 @@ with tab2:
 with tab3:
     st.subheader("Bazarda axtar")
     st.markdown(
-        "<div class='page-subtitle'>İstədiyin yeməyi və ya içkini axtar. Sistem ən uyğun məhsulları və uyğun restoranları göstərəcək.</div>",
+        "<div class='page-subtitle'>Sadə axtarış, smart axtarış və restoran üzrə axtarış rejimləri ilə daha rahat istifadə et.</div>",
         unsafe_allow_html=True,
     )
 
     search_reset_map = {
+        "search_mode_radio": "Sadə",
         "search_query_input": "",
         "search_item_select": "",
         "search_restaurants_multiselect": [],
         "search_classes_multiselect": [],
         "search_min_price_input": "",
         "search_max_price_input": "",
-        "search_top_n_number": 30,
+        "search_top_n_number": 20,
         "search_price_band_radio": "Hamısı",
+        "search_rest_mode_restaurant": "",
+        "search_rest_mode_query": "",
+        "smart_query_input": "",
+        "smart_min_price_input": "",
+        "smart_max_price_input": "",
+        "smart_classes_multiselect": [],
+        "smart_restaurants_multiselect": [],
+        "smart_top_n_number": 10,
+        "search_rest_mode_min_price": "",
+        "search_rest_mode_max_price": "",
     }
 
     top_left, top_right = st.columns([6, 2])
     with top_right:
         render_tab_reset_button("Hamısını sıfırla", search_reset_map, "reset_search_tab")
 
-    c1, c2 = st.columns(2)
-
-    with c1:
-        search_query = render_clearable_text(
-            "Nə axtarırsan?",
-            key="search_query_input",
-            placeholder="məs: toyuq, burger, plov, çay"
-        )
-
-        search_item_selected = render_clearable_selectbox(
-            label="Məhsulu siyahıdan seç",
-            options=global_item_options,
-            key="search_item_select",
-            placeholder_label="Məhsul seç...",
-            format_map=global_item_display_map
-        )
-
-    with c2:
-        search_classes = render_clearable_multiselect(
-            "Kateqoriyalar",
-            options=all_classes,
-            key="search_classes_multiselect",
-            format_map=class_format_map
-        )
-
-        search_restaurants = render_clearable_multiselect(
-            "Restoranlar",
-            options=all_restaurants,
-            key="search_restaurants_multiselect"
-        )
-
-    st.markdown("#### Sürətli qiymət seçimi")
-    selected_band_label = st.radio(
-        "Qiymət bandı",
-        options=[x[0] for x in SEARCH_PRICE_BANDS],
+    search_mode = st.radio(
+        "Axtarış növü",
+        options=["Sadə", "Smart", "Restoran üzrə"],
         horizontal=True,
-        key="search_price_band_radio",
-        label_visibility="collapsed"
+        key="search_mode_radio",
     )
 
-    band_map = {x[0]: (x[1], x[2]) for x in SEARCH_PRICE_BANDS}
-    band_min, band_max = band_map[selected_band_label]
+    if search_mode == "Sadə":
+        st.markdown(
+            "<div class='mode-box'><b>Sadə</b><br><span class='small-muted'>Məhsul axtar, nəticələri gör və uyğun restoran tap.</span></div>",
+            unsafe_allow_html=True,
+        )
 
-    search_min_price, search_max_price = render_price_range(
-        "Qiymət",
-        "search_min_price_input",
-        "search_max_price_input"
-    )
+        c1, c2 = st.columns(2)
+        with c1:
+            search_query = render_clearable_text(
+                "Nə axtarırsan?",
+                key="search_query_input",
+                placeholder="məs: toyuq, burger, plov, çay",
+            )
+        with c2:
+            search_item_selected = render_clearable_selectbox(
+                label="Məhsulu siyahıdan seç",
+                options=global_item_options,
+                key="search_item_select",
+                placeholder_label="Məhsul seç...",
+                format_map=global_item_display_map,
+            )
 
-    if search_min_price is None and band_min is not None:
-        search_min_price = band_min
-    if search_max_price is None and band_max is not None:
-        search_max_price = band_max
+        st.markdown("#### Sürətli qiymət seçimi")
+        selected_band_label = st.radio(
+            "Qiymət bandı",
+            options=[x[0] for x in SEARCH_PRICE_BANDS],
+            horizontal=True,
+            key="search_price_band_radio",
+            label_visibility="collapsed",
+        )
 
-    search_top_n = st.number_input(
-        "Neçə nəticə göstərilsin?",
-        min_value=1,
-        value=30,
-        step=1,
-        key="search_top_n_number"
-    )
+        band_map = {x[0]: (x[1], x[2]) for x in SEARCH_PRICE_BANDS}
+        band_min, band_max = band_map[selected_band_label]
 
-    if search_query.strip():
-        suggestions = get_top_query_suggestions(choice_df, search_query, max_suggestions=8)
-        if suggestions:
-            st.caption("Oxşar axtarış variantları:")
-            st.write(" • " + " • ".join(suggestions))
+        search_min_price, search_max_price = render_price_range(
+            "Qiymət",
+            "search_min_price_input",
+            "search_max_price_input",
+        )
 
-    if st.button("Axtar", key="search_market_button"):
-        with st.spinner("Axtarış aparılır..."):
-            if validate_min_max(search_min_price, search_max_price):
-                results = search_market_items(
-                    df=choice_df,
-                    selected_item=search_item_selected,
-                    query_text=search_query,
-                    selected_restaurants=search_restaurants,
-                    selected_classes=search_classes,
-                    min_price=search_min_price,
-                    max_price=search_max_price,
-                    top_n=int(search_top_n)
-                )
+        if search_min_price is None and band_min is not None:
+            search_min_price = band_min
+        if search_max_price is None and band_max is not None:
+            search_max_price = band_max
 
-                if results.empty:
-                    st.warning("Uyğun nəticə tapılmadı.")
-                else:
-                    summary = build_search_overview(results)
-                    render_search_summary_boxes(summary)
-                    st.caption(f"Ən çox uyğun mövqe olan restoran: {summary['top_restaurant_by_count']}")
-                    st.divider()
+        with st.expander("Əlavə filtrlər", expanded=False):
+            search_classes = render_clearable_multiselect(
+                "Kateqoriyalar",
+                options=all_classes,
+                key="search_classes_multiselect",
+                format_map=class_format_map,
+            )
+            search_restaurants = render_clearable_multiselect(
+                "Restoranlar",
+                options=all_restaurants,
+                key="search_restaurants_multiselect",
+            )
+            search_top_n = st.number_input(
+                "Neçə nəticə göstərilsin?",
+                min_value=1,
+                step=1,
+                key="search_top_n_number",
+            )
 
-                    st.markdown("## Ən uyğun məhsullar")
-                    for _, row in results.iterrows():
-                        st.markdown(
-                            f"""
-                            <div class="item-card">
-                                <div class="item-title">{row["ITEM_NAME"]}</div>
-                                <div class="item-meta">
-                                    {row["RESTAURANT_NAME"]} · {get_category_label(row["FINAL_CLASS"])} · {float(row["PRICE"]):.2f} AZN
-                                </div>
-                            </div>
-                            """,
-                            unsafe_allow_html=True,
-                        )
+        if search_query.strip():
+            suggestions = get_top_query_suggestions(choice_df, search_query, max_suggestions=8)
+            if suggestions:
+                st.caption("Oxşar axtarış variantları:")
+                st.write(" • " + " • ".join(suggestions))
 
-                        a1, a2 = st.columns([2, 2])
-                        with a1:
-                            if st.button("Səbətə əlavə et", key=f"search_add_{row.name}"):
-                                add_to_basket(
-                                    restaurant_name=row["RESTAURANT_NAME"],
-                                    item_name=row["ITEM_NAME"],
-                                    price=float(row["PRICE"]),
-                                    final_class=row["FINAL_CLASS"]
-                                )
-                        with a2:
-                            st.button(
-                                "Bu restoranın menyusuna bax",
-                                key=f"search_menu_jump_{row.name}",
-                                on_click=set_widget_value,
-                                args=("menu_restaurant_select", row["RESTAURANT_NAME"])
-                            )
-
-                    st.divider()
-                    st.markdown("## Bu sorğu üçün uyğun restoranlar")
-
-                    grouped = group_search_results_by_restaurant(
-                        results_df=results,
-                        top_restaurants=min(12, int(search_top_n)),
-                        sample_items_per_restaurant=4
+        if st.button("Axtar", key="search_market_button_simple"):
+            with st.spinner("Axtarış aparılır..."):
+                if validate_min_max(search_min_price, search_max_price):
+                    results = search_market_items(
+                        df=choice_df,
+                        selected_item=search_item_selected,
+                        query_text=search_query,
+                        selected_restaurants=search_restaurants,
+                        selected_classes=search_classes,
+                        min_price=search_min_price,
+                        max_price=search_max_price,
+                        top_n=int(search_top_n),
                     )
 
-                    for idx, row in enumerate(grouped):
-                        st.markdown(
-                            f"""
-                            <div class="restaurant-card">
-                                <div class="item-title">{row['restaurant_name']}</div>
-                                <div class="item-meta">
-                                    {row['match_count']} uyğun mövqe · {row['min_price']:.2f} – {row['max_price']:.2f} AZN
-                                </div>
-                            </div>
-                            """,
-                            unsafe_allow_html=True,
-                        )
-
-                        st.write("Nümunə məhsullar:")
-                        for sample in row["sample_items"]:
-                            st.write(
-                                f"- {sample['ITEM_NAME']} — {float(sample['PRICE']):.2f} AZN "
-                                f"({get_category_label(sample['FINAL_CLASS'])})"
-                            )
-
-                        b1, b2 = st.columns([2, 2])
-                        with b1:
-                            st.button(
-                                "Menyuya keç",
-                                key=f"group_jump_menu_{idx}",
-                                on_click=set_widget_value,
-                                args=("menu_restaurant_select", row["restaurant_name"])
-                            )
-                        with b2:
-                            st.button(
-                                "Səbət üçün seç",
-                                key=f"group_jump_basket_{idx}",
-                                on_click=set_widget_value,
-                                args=("basket_restaurant_choice_select", row["restaurant_name"])
-                            )
+                    if results.empty:
+                        st.warning("Uyğun nəticə tapılmadı.")
+                    else:
+                        summary = build_search_overview(results)
+                        render_search_summary_boxes(summary)
+                        st.caption(f"Ən çox uyğun mövqe olan restoran: {summary['top_restaurant_by_count']}")
                         st.divider()
+
+                        st.markdown("## Ən uyğun məhsullar")
+                        for _, row in results.iterrows():
+                            st.markdown(
+                                f"""
+                                <div class="item-card">
+                                    <div class="item-title">{row["ITEM_NAME"]}</div>
+                                    <div class="item-meta">
+                                        {row["RESTAURANT_NAME"]} · {get_category_label(row["FINAL_CLASS"])} · {float(row["PRICE"]):.2f} AZN
+                                    </div>
+                                </div>
+                                """,
+                                unsafe_allow_html=True,
+                            )
+
+                            a1, a2 = st.columns([2, 2])
+                            with a1:
+                                if st.button("Səbətə əlavə et", key=f"search_add_{row.name}"):
+                                    add_to_basket(
+                                        restaurant_name=row["RESTAURANT_NAME"],
+                                        item_name=row["ITEM_NAME"],
+                                        price=float(row["PRICE"]),
+                                        final_class=row["FINAL_CLASS"],
+                                    )
+                            with a2:
+                                st.button(
+                                    "Bu restoranın menyusuna bax",
+                                    key=f"search_menu_jump_{row.name}",
+                                    on_click=set_widget_value,
+                                    args=("menu_restaurant_select", row["RESTAURANT_NAME"]),
+                                )
+
+                        st.divider()
+                        st.markdown("## Bu sorğu üçün uyğun restoranlar")
+                        grouped = group_search_results_by_restaurant(results, top_restaurants=10, sample_items_per_restaurant=4)
+
+                        for idx, row in enumerate(grouped):
+                            if idx == 0:
+                                st.markdown("<div class='badge'>🔥 Tövsiyə olunur</div>", unsafe_allow_html=True)
+
+                            st.markdown(
+                                f"""
+                                <div class="restaurant-card">
+                                    <div class="item-title">{row['restaurant_name']}</div>
+                                    <div class="item-meta">
+                                        {row['match_count']} uyğun mövqe · {row['min_price']:.2f} – {row['max_price']:.2f} AZN
+                                    </div>
+                                </div>
+                                """,
+                                unsafe_allow_html=True,
+                            )
+
+                            st.write("Nümunə məhsullar:")
+                            for sample in row["sample_items"]:
+                                st.write(
+                                    f"- {sample['ITEM_NAME']} — {float(sample['PRICE']):.2f} AZN "
+                                    f"({get_category_label(sample['FINAL_CLASS'])})"
+                                )
+
+                            b1, b2 = st.columns([2, 2])
+                            with b1:
+                                st.button(
+                                    "Menyuya keç",
+                                    key=f"group_jump_menu_{idx}",
+                                    on_click=set_widget_value,
+                                    args=("menu_restaurant_select", row["restaurant_name"]),
+                                )
+                            with b2:
+                                st.button(
+                                    "Səbət üçün seç",
+                                    key=f"group_jump_basket_{idx}",
+                                    on_click=set_widget_value,
+                                    args=("basket_restaurant_choice_select", row["restaurant_name"]),
+                                )
+                            st.divider()
+
+    elif search_mode == "Smart":
+        st.markdown(
+            "<div class='mode-box'><b>Smart</b><br><span class='small-muted'>Sorğu yaz, sistem uyğun restoranlarda hazır variantlar qursun.</span></div>",
+            unsafe_allow_html=True,
+        )
+
+        smart_query = render_clearable_text(
+            "Nə axtarırsan?",
+            key="smart_query_input",
+            placeholder="məs: toyuq burger, plov, kabab",
+        )
+
+        smart_min_price, smart_max_price = render_price_range(
+            "Ümumi qiymət",
+            "smart_min_price_input",
+            "smart_max_price_input",
+        )
+
+        with st.expander("Əlavə filtrlər", expanded=False):
+            smart_classes = render_clearable_multiselect(
+                "Kateqoriyalar",
+                options=all_classes,
+                key="smart_classes_multiselect",
+                format_map=class_format_map,
+            )
+            smart_restaurants = render_clearable_multiselect(
+                "Restoranlar",
+                options=all_restaurants,
+                key="smart_restaurants_multiselect",
+            )
+            smart_top_n = st.number_input(
+                "Neçə variant göstərilsin?",
+                min_value=1,
+                step=1,
+                key="smart_top_n_number",
+            )
+
+        if smart_query.strip():
+            suggestions = get_top_query_suggestions(choice_df, smart_query, max_suggestions=8)
+            if suggestions:
+                st.caption("Oxşar axtarış variantları:")
+                st.write(" • " + " • ".join(suggestions))
+
+        if st.button("Smart axtar", key="search_market_button_smart"):
+            with st.spinner("Smart variantlar hesablanır..."):
+                if validate_min_max(smart_min_price, smart_max_price):
+                    rows = build_smart_bundles_from_query(
+                        df=choice_df,
+                        query_text=smart_query,
+                        min_total=smart_min_price,
+                        max_total=smart_max_price,
+                        selected_restaurants=smart_restaurants,
+                        selected_classes=smart_classes,
+                        top_n=int(smart_top_n),
+                    )
+
+                    if not rows:
+                        st.warning("Uyğun smart variant tapılmadı.")
+                    else:
+                        st.markdown("## Hazır variantlar")
+                        for idx, row in enumerate(rows):
+                            render_basket_result_card(row, idx=f"smart_{idx}", recommended=(idx == 0))
+                            st.divider()
+
+    else:
+        st.markdown(
+            "<div class='mode-box'><b>Restoran üzrə</b><br><span class='small-muted'>Əvvəl restoran seç, sonra həmin restoranın daxilində axtar.</span></div>",
+            unsafe_allow_html=True,
+        )
+
+        rest_mode_restaurant = render_clearable_selectbox(
+            label="Restoran seç",
+            options=all_restaurants,
+            key="search_rest_mode_restaurant",
+            placeholder_label="Restoran seç...",
+        )
+
+        rest_mode_query = render_clearable_text(
+            "Restoran daxilində nə axtarırsan?",
+            key="search_rest_mode_query",
+            placeholder="məs: toyuq, desert, çay",
+        )
+
+        rest_mode_min_price, rest_mode_max_price = render_price_range(
+            "Qiymət",
+            "search_rest_mode_min_price",
+            "search_rest_mode_max_price",
+        )
+
+        if st.button("Restoranda axtar", key="search_market_button_rest_mode"):
+            with st.spinner("Restoranda axtarış aparılır..."):
+                if not rest_mode_restaurant:
+                    st.info("Əvvəl restoran seç.")
+                elif validate_min_max(rest_mode_min_price, rest_mode_max_price):
+                    rest_df = get_restaurant_menu(choice_df, rest_mode_restaurant)
+
+                    if rest_mode_query.strip():
+                        rest_df["match_score"] = rest_df.apply(
+                            lambda row: get_fuzzy_match_score(rest_mode_query, row["ITEM_NAME"], row["ITEM_NAME_NORM"]),
+                            axis=1,
+                        )
+                        rest_df = rest_df[rest_df["match_score"] > 8].copy()
+                        rest_df = rest_df.sort_values(["match_score", "PRICE", "ITEM_NAME"], ascending=[False, True, True])
+
+                    rest_df = apply_price_range(rest_df, "PRICE", rest_mode_min_price, rest_mode_max_price)
+
+                    if rest_df.empty:
+                        st.warning("Uyğun nəticə tapılmadı.")
+                    else:
+                        st.markdown(f"## {rest_mode_restaurant}")
+                        for _, row in rest_df.iterrows():
+                            render_item_card(
+                                item_name=row["ITEM_NAME"],
+                                price=float(row["PRICE"]),
+                                class_code=row["FINAL_CLASS"],
+                                add_key=f"rest_mode_add_{row.name}",
+                                restaurant_name=row["RESTAURANT_NAME"],
+                            )
