@@ -143,6 +143,7 @@ def set_background(image_file: str = "background.jpg") -> None:
             unsafe_allow_html=True,
         )
 
+
 set_background("background.jpg")
 
 # =========================
@@ -298,7 +299,6 @@ st.markdown(
         align-items: end;
     }
 
-    /* INPUTS */
     div[data-baseweb="input"] > div,
     div[data-baseweb="base-input"] > div,
     div[data-testid="stTextInput"] input,
@@ -313,7 +313,6 @@ st.markdown(
         color: #94a3b8 !important;
     }
 
-    /* SELECTBOX */
     div[data-baseweb="select"] > div {
         background-color: rgba(15, 23, 42, 0.90) !important;
         color: #f9fafb !important;
@@ -325,19 +324,16 @@ st.markdown(
         color: #f9fafb !important;
     }
 
-    /* MULTISELECT TAGS */
     div[data-baseweb="tag"] {
         background-color: rgba(30, 41, 59, 0.96) !important;
         color: #f9fafb !important;
         border: 1px solid rgba(255,255,255,0.10) !important;
     }
 
-    /* RADIO */
     div[role="radiogroup"] label {
         color: #f3f4f6 !important;
     }
 
-    /* TABS */
     button[data-baseweb="tab"] {
         color: #d1d5db !important;
         background: transparent !important;
@@ -348,14 +344,12 @@ st.markdown(
         border-bottom: 2px solid #f97316 !important;
     }
 
-    /* EXPANDER */
     details {
         background: rgba(15, 23, 42, 0.55);
         border-radius: 12px;
         padding: 4px 8px;
     }
 
-    /* METRIC */
     div[data-testid="stMetric"] {
         background: rgba(15, 23, 42, 0.72);
         border: 1px solid rgba(255,255,255,0.10);
@@ -363,7 +357,6 @@ st.markdown(
         padding: 10px 14px;
     }
 
-    /* LABELS */
     label, p, span, div {
         color: inherit;
     }
@@ -637,6 +630,9 @@ def load_menu_data() -> pd.DataFrame:
     for col in ["SLUG", "RESTAURANT_NAME", "ITEM_NAME", "ITEM_NORM", "FINAL_CLASS"]:
         df[col] = df[col].astype(str).str.strip()
 
+    df = df[df["RESTAURANT_NAME"].notna()].copy()
+    df = df[df["RESTAURANT_NAME"].astype(str).str.strip() != ""].copy()
+
     df = df[~df["RESTAURANT_NAME"].apply(restaurant_is_blacklisted)].copy()
     df = df[~df["ITEM_NAME"].apply(item_is_bad)].copy()
 
@@ -883,7 +879,7 @@ def group_search_results_by_restaurant(
         sample_items = part.head(sample_items_per_restaurant)[["ITEM_NAME", "PRICE", "FINAL_CLASS"]].to_dict("records")
         rows.append(
             {
-                "restaurant_name": rest_name,
+                "restaurant_name": str(rest_name),
                 "match_count": int(len(part)),
                 "min_price": float(part["PRICE"].min()),
                 "median_price": float(part["PRICE"].median()),
@@ -893,7 +889,7 @@ def group_search_results_by_restaurant(
             }
         )
 
-    rows = sorted(rows, key=lambda x: (-x["best_score"], -x["match_count"], x["min_price"], x["restaurant_name"]))
+    rows = sorted(rows, key=lambda x: (-float(x["best_score"]), -int(x["match_count"]), float(x["min_price"]), str(x["restaurant_name"])))
     return rows[:top_restaurants]
 
 
@@ -904,15 +900,20 @@ def build_search_overview(results_df: pd.DataFrame) -> Dict:
         .reset_index()
     )
 
+    top_restaurant = str(
+        by_restaurant.sort_values(
+            ["item_count", "min_price", "RESTAURANT_NAME"],
+            ascending=[False, True, True],
+        ).iloc[0]["RESTAURANT_NAME"]
+    )
+
     return {
         "restaurant_count": int(results_df["RESTAURANT_NAME"].nunique()),
         "item_count": int(len(results_df)),
         "min_price": float(results_df["PRICE"].min()),
         "median_price": float(results_df["PRICE"].median()),
         "max_price": float(results_df["PRICE"].max()),
-        "top_restaurant_by_count": by_restaurant.sort_values(
-            ["item_count", "min_price", "RESTAURANT_NAME"], ascending=[False, True, True]
-        ).iloc[0]["RESTAURANT_NAME"],
+        "top_restaurant_by_count": top_restaurant,
     }
 
 
@@ -946,7 +947,7 @@ def build_exact_basket_for_restaurant(rest_df: pd.DataFrame, selected_map: Dict[
 
     avg_item_score = sum(x["score"] for x in basket_items) / max(1, len(basket_items))
     return {
-        "restaurant_name": rest_df["RESTAURANT_NAME"].iloc[0],
+        "restaurant_name": str(rest_df["RESTAURANT_NAME"].iloc[0]),
         "total_price": round(total, 2),
         "items": basket_items,
         "bundle_score": compute_bundle_score(total, len(basket_items), None, avg_item_score),
@@ -977,7 +978,14 @@ def build_cross_restaurant_exact_baskets(
         built["bundle_score"] = compute_bundle_score(total, len(built["items"]), target_mid, 50.0)
         rows.append(built)
 
-    rows = sorted(rows, key=lambda x: (-x["bundle_score"], x["total_price"], x["restaurant_name"]))
+    rows = sorted(
+        rows,
+        key=lambda x: (
+            -float(x.get("bundle_score", 0)),
+            float(x.get("total_price", 0)),
+            str(x.get("restaurant_name", "")),
+        ),
+    )
     return rows[:top_n]
 
 
@@ -1036,7 +1044,7 @@ def build_category_count_baskets(
         target_price_per_item = target_mid / total_item_count
 
     for _, rest_df in df.groupby("SLUG"):
-        restaurant_name = rest_df["RESTAURANT_NAME"].iloc[0]
+        restaurant_name = str(rest_df["RESTAURANT_NAME"].iloc[0])
         basket_items = []
         ok = True
 
@@ -1056,26 +1064,44 @@ def build_category_count_baskets(
         if not ok:
             continue
 
-        total = round(sum(x["price"] for x in basket_items), 2)
+        total = round(sum(float(x["price"]) for x in basket_items), 2)
+
         if min_total is not None and total < min_total:
             continue
         if max_total is not None and total > max_total:
             continue
 
-        avg_score = round(sum(x["score"] for x in basket_items) / len(basket_items), 3) if basket_items else 0.0
-        bundle_score = compute_bundle_score(total, len(basket_items), target_mid, avg_score)
+        avg_score = round(
+            sum(float(x["score"]) for x in basket_items) / len(basket_items),
+            3
+        ) if basket_items else 0.0
+
+        bundle_score = compute_bundle_score(
+            total,
+            len(basket_items),
+            target_mid,
+            avg_score
+        )
 
         rows.append(
             {
                 "restaurant_name": restaurant_name,
-                "total_price": total,
+                "total_price": float(total),
                 "items": basket_items,
-                "avg_score": avg_score,
-                "bundle_score": bundle_score,
+                "avg_score": float(avg_score),
+                "bundle_score": float(bundle_score),
             }
         )
 
-    rows = sorted(rows, key=lambda x: (-x["bundle_score"], x["total_price"], x["restaurant_name"]))
+    rows = sorted(
+        rows,
+        key=lambda x: (
+            -float(x.get("bundle_score", 0)),
+            float(x.get("total_price", 0)),
+            str(x.get("restaurant_name", ""))
+        )
+    )
+
     return rows[:top_n]
 
 
@@ -1141,14 +1167,21 @@ def build_smart_bundles_from_query(
 
         rows.append(
             {
-                "restaurant_name": rest_name,
-                "total_price": total,
+                "restaurant_name": str(rest_name),
+                "total_price": float(total),
                 "items": items,
-                "bundle_score": bundle_score,
+                "bundle_score": float(bundle_score),
             }
         )
 
-    rows = sorted(rows, key=lambda x: (-x["bundle_score"], x["total_price"], x["restaurant_name"]))
+    rows = sorted(
+        rows,
+        key=lambda x: (
+            -float(x.get("bundle_score", 0)),
+            float(x.get("total_price", 0)),
+            str(x.get("restaurant_name", "")),
+        ),
+    )
     return rows[:top_n]
 
 
@@ -1890,4 +1923,4 @@ with tab3:
                                 class_code=row["FINAL_CLASS"],
                                 add_key=f"rest_mode_add_{row.name}",
                                 restaurant_name=row["RESTAURANT_NAME"],
-                            )
+        )
